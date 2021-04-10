@@ -1,6 +1,6 @@
 <?php
-$ParametersConfig['dbhost'] = 'localhost';
-$ParametersConfig['dbuser'] = 'root';
-$ParametersConfig['dbpass'] = '123';
-$ParametersConfig['dbname'] = 'tiqaldb';
+$ParametersConfig['host'] = 'localhost';
+$ParametersConfig['user'] = 'root';
+$ParametersConfig['pass'] = '123';
+$ParametersConfig['db'] = 'tiqaldb';
 $ParametersConfig['table']  = 'libro';

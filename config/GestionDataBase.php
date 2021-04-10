@@ -1,76 +1,61 @@
 <?php
-include_once 'ConfigDB.php';
-class Database
+include_once 'ConfigDb.php';
+class GestionDataBase
 {
-    private static $PDOInstance;
-    protected $transactionCounter = 0;
-    private static $instance      = null;
-    public $transactionState      = 0;
+    private static $instance;
 
-    public function __construct($ParametersConfig = '')
+    public function __construct()
     {
-        if (!self::$PDOInstance) {
+        if (!self::$instance) {
             try {
-                if (empty($ParametersConfig)) {
-                    global $ParametersConfig;
-                }
-                self::$PDOInstance = new PDO("mysql:dbname=$ParametersConfig[dbname];host=$ParametersConfig[dbhost]", $ParametersConfig['dbuser'], $ParametersConfig['dbpass']);
-                self::$PDOInstance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                global $ParametersConfig;
+                self::$instance = new PDO("mysql:dbname=$ParametersConfig[db];host=$ParametersConfig[host]", $ParametersConfig['user'], $ParametersConfig['pass']);
+                self::$instance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             } catch (PDOException $e) {
                 die("PDO CONNECTION ERROR: " . $e->getMessage() . "<br/>");
             }
         }
-        return self::$PDOInstance;
-    }
-
-    public static function getInstance()
-    {
-        if (is_null(self::$instance)) {
-            if (empty($ParametersConfig)) {
-                global $ParametersConfig;
-            }
-            self::$instance = new Database($ParametersConfig);
-        }
         return self::$instance;
     }
+
     public function errorInfo()
     {
-        return self::$PDOInstance->errorInfo();
+        return self::$instance->errorInfo();
     }
     public function exec($statement)
     {
-        return self::$PDOInstance->exec($statement);
+        return self::$instance->exec($statement);
     }
 
     public function getAttribute($attribute)
     {
-        return self::$PDOInstance->getAttribute($attribute);
+        return self::$instance->getAttribute($attribute);
     }
 
     public function getAvailableDrivers()
     {
-        return Self::$PDOInstance->getAvailableDrivers();
+        return Self::$instance->getAvailableDrivers();
     }
 
     public function query($statement)
     {
-        return self::$PDOInstance->query($statement);
+        return self::$instance->query($statement);
     }
 
     public function quote($input, $parameter_type = 0)
     {
-        return self::$PDOInstance->quote($input, $parameter_type);
+        return self::$instance->quote($input, $parameter_type);
     }
     public function setAttribute($attribute, $value)
     {
-        return self::$PDOInstance->setAttribute($attribute, $value);
+        return self::$instance->setAttribute($attribute, $value);
     }
     public function prepare($statement, $driver_options = false)
     {
         if (!$driver_options) {
             $driver_options = array();
         }
-        return self::$PDOInstance->prepare($statement, $driver_options);
+        return self::$instance->prepare($statement, $driver_options);
     }
 
     public function querySelectFetchAllAssoc($query, $data = null)
@@ -87,15 +72,20 @@ class Database
             }
         } catch (PDOException $exc) {
             $status  = false;
-            $message = utf8_encode($exc->getMessage());
-            if ($this->transactionCounter > 0) {
-                $this->transactionStatus = false;
-            }
-            $this->transactionMessage[] = $message;
-            $this->printQuery($message, $query, $data);
+            $message = utf8_encode($exc->getMessage());            
         }
         $response = !empty($response) ? $response : null;
         return (object) array('status' => $status, 'response' => $response, 'errorSQL' => $message);
+    }
+
+    public function insertMultiArray($nameTable,$lectArray,$heads)
+    {
+        $countParameters = implode(',', array_fill(0, count($lectArray[0]), '?'));
+        $values          = '(' . implode('),(', array_fill(0, count($lectArray), $countParameters)) . ')';
+        $dataInsert      = call_user_func_array('array_merge', $lectArray);
+        $sql             = 'INSERT INTO ' . $nameTable . ' (' . implode(',', $heads) . ') VALUES ' . $values . ';';
+        $resultado       = $this->prepare($sql);
+        return $resultado->execute($dataInsert);
     }
 
 }

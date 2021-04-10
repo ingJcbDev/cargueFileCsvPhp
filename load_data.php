@@ -5,9 +5,9 @@ $lectura  = fopen($fileName, "r");
 if (!$lectura) {
     exit("Error al intentar abrir archivo $fileName");
 }
-$Connection = Database::getInstance();
+$connection = new GestionDataBase();
 $sql        = "DESCRIBE $ParametersConfig[table]";
-$response   = $Connection->querySelectFetchAllAssoc($sql)->response;
+$response   = $connection->querySelectFetchAllAssoc($sql)->response;
 $heads      = array();
 foreach ($response as $key => $value) {
     $heads[] = $value['Field'];
@@ -30,12 +30,7 @@ if($count0 !== $count1){
     die('Los campos suministrados no corresponden campos que son necesarios para realizar la transacion');
 }
 
-$countParameters = implode(',', array_fill(0, count($lectArray[0]), '?'));
-$values          = '(' . implode('),(', array_fill(0, count($lectArray), $countParameters)) . ')';
-$dataInsert      = call_user_func_array('array_merge', $lectArray);
-$sql             = 'INSERT INTO ' . $ParametersConfig['table'] . ' (' . implode(',', $heads) . ') VALUES ' . $values . ';';
-$resultado       = $Connection->prepare($sql);
-$response        = $resultado->execute($dataInsert);
+$response = $connection->insertMultiArray($ParametersConfig['table'],$lectArray,$heads);
 if($response){
     die('Datos insertados correctamente');
 }
